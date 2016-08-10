@@ -97,7 +97,10 @@ void normalize_rms::process (Pulsar::Archive* archive)
             // Scale orig data
             double scale;
             if (var[0][ichan]>0.0) {
-                scale = 1.0 / sqrt(var[0][ichan]); // Single-pol
+                scale = 1.0 / sqrt(var[0][ichan]); // Single-pol or stokes
+                if ((archive->get_state()==Signal::Coherence) 
+                        || (archive->get_state()==Signal::PPQQ))
+                    scale = 1.0 / sqrt(0.5*(var[0][ichan]+var[1][ichan]));
                 for (unsigned ipol=0; ipol<archive->get_npol(); ipol++) 
                 {
                     //scale = 1.0 / sqrt(var[ipol][ichan]); // Separate pols
