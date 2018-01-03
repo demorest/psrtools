@@ -37,17 +37,23 @@ public:
 protected:
     void add_options (CommandLine::Menu&);
 
+    bool do_weight;
 };
 
 
 normalize_rms::normalize_rms ()
   : Application ("normalize_rms", "Scale data so offpulse RMS = 1.0")
 {
+    do_weight = false;
 }
 
 void normalize_rms::add_options (CommandLine::Menu& menu)
 {
+    CommandLine::Argument* arg;
+    arg = menu.add (do_weight, 'w');
+    arg->set_help("apply scaling to weights rather than to data");
 }
+
 
 
 void normalize_rms::setup ()
@@ -73,8 +79,6 @@ void normalize_rms::process (Pulsar::Archive* archive)
     if (scale_indep_subints == false)
         copy->get_Integration(0)->baseline_stats(&mean, &var);
 
-    bool do_weight = false;
-
     // Loop over subints
     for (unsigned isub=0; isub<archive->get_nsubint(); isub++) {
 
@@ -89,6 +93,9 @@ void normalize_rms::process (Pulsar::Archive* archive)
             double weight;
             if (var[0][ichan]>0.0) 
                 weight = 1.0 / sqrt(var[0][ichan]);
+                if ((archive->get_state()==Signal::Coherence) 
+                        || (archive->get_state()==Signal::PPQQ))
+                    weight = 1.0 / sqrt(0.5*(var[0][ichan]+var[1][ichan]));
             else 
                 weight = 0.0;
             if (archive->get_Integration(isub)->get_weight(ichan)!=0.0) 
