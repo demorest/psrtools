@@ -15,6 +15,7 @@ using namespace std;
 #include "Pulsar/ProfileShiftFit.h"
 #include "Pulsar/PhaseWeight.h"
 #include "strutil.h"
+#include "math.h"
 
 using namespace Pulsar;
 
@@ -89,14 +90,17 @@ void normalize_rms::process (Pulsar::Archive* archive)
         // Loop over channels
         for (unsigned ichan=0; ichan<archive->get_nchan(); ichan++) {
 
+          double varnorm = fabs(sqrt(var[0][ichan])/mean[0][ichan].val);
+          if (mean[0][ichan].val==0.0) varnorm=0.0;
+
           if (do_weight) {
             double weight;
-            if (var[0][ichan]>0.0) 
+            if (varnorm>0.0) {
                 weight = 1.0 / sqrt(var[0][ichan]);
                 if ((archive->get_state()==Signal::Coherence) 
                         || (archive->get_state()==Signal::PPQQ))
                     weight = 1.0 / sqrt(0.5*(var[0][ichan]+var[1][ichan]));
-            else 
+            } else 
                 weight = 0.0;
             if (archive->get_Integration(isub)->get_weight(ichan)!=0.0) 
                 archive->get_Integration(isub)->set_weight(ichan, weight);
