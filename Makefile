@@ -4,10 +4,10 @@ install: $(PROGS)
 	cp $(PROGS) $(PREFIX)/bin
 
 autotoa: autotoa.C
-	$(CXX) -g `psrchive --cflags` -o autotoa autotoa.C `psrchive --libs` 
+	$(CXX) $(CXXFLAGS) `psrchive --cflags` -o autotoa autotoa.C $(LDFLAGS) `psrchive --libs` 
 
 normalize_rms: normalize_rms.C
-	$(CXX) -g `psrchive --cflags` -o normalize_rms normalize_rms.C `psrchive --libs` 
+	$(CXX) $(CXXFLAGS) `psrchive --cflags` -o normalize_rms normalize_rms.C $(LDFLAGS) `psrchive --libs` 
 
 clean:
 	rm -f $(PROGS) *.o
