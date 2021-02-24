@@ -16,6 +16,7 @@
 #include "Pulsar/AdaptiveSmooth.h"
 #include "MEAL/ScaledVonMises.h"
 #include "model_profile.h"
+#include "MJD.h"
 
 #include "Error.h"
 #include "dirutil.h"
@@ -197,6 +198,8 @@ int main (int argc, char *argv[]) try {
 
     /* Iterate template, TOA fitting */
     unsigned it=0, nskip=0, ntot=0;
+    double ttot=0.0;
+    MJD t0, t1;
     bool converged=false;
     while ((it<max_it) && (!converged)) {
 
@@ -208,6 +211,9 @@ int main (int argc, char *argv[]) try {
         /* Reset counters */
         ntot=0;
         nskip=0;
+        ttot=0.0;
+        t0=99999.0;
+        t1=0.0;
 
         /* Reset norm */
         double pnorm = 0.0;
@@ -227,6 +233,9 @@ int main (int argc, char *argv[]) try {
                 if (fscrunch) arch->fscrunch();
                 if (tscrunch) arch->tscrunch();
 
+                /* Remove profile baseline */
+                arch->remove_baseline();
+
                 /* Convert pol state */
                 if (use_invint)
                     //arch->convert_state(Signal::Invariant);
@@ -239,12 +248,18 @@ int main (int argc, char *argv[]) try {
                 /* Loop over subint, channel */
                 for (unsigned isub=0; isub<arch->get_nsubint(); isub++) {
                     subint = arch->get_Integration(isub);
+                    t0 = std::min(t0, subint->get_epoch());
+                    t1 = std::max(t1, subint->get_epoch());
+                    ttot += subint->get_duration();
                     for (unsigned ichan=0; ichan<subint->get_nchan(); ichan++) {
 
                         ntot++;
 
                         double shift, eshift, scale, escale, chi2;
                         prof = subint->get_Profile(0,ichan);
+
+                        /* Skip if zero weight */
+                        if (prof->get_weight()==0.0) { nskip++; continue; }
 
                         /* New method */
                         psf.set_Profile(prof);
@@ -379,6 +394,9 @@ int main (int argc, char *argv[]) try {
     /* Replace template with sum
      * if we want orig sum out 
      */
+    tmplarch->get_Integration(0)->set_epoch(0.5*(t0+t1));
+    tmplarch->get_Integration(0)->set_duration(ttot);
+    tmplarch->update_model();
     if (use_invint) {
         tmplarch->convert_state(Signal::Invariant);
         for (unsigned ibin=0; ibin<tmplprof->get_nbin(); ibin++)
