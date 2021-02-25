@@ -12,6 +12,7 @@ requirements:
     build:
         - {{ compiler('cxx') }}
         - make
+        - perl
     host:
         - psrchive
     run:
