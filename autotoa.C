@@ -15,7 +15,6 @@
 #include "Pulsar/WaveletSmooth.h"
 #include "Pulsar/AdaptiveSmooth.h"
 #include "MEAL/ScaledVonMises.h"
-#include "model_profile.h"
 #include "MJD.h"
 
 #include "Error.h"
@@ -193,7 +192,6 @@ int main (int argc, char *argv[]) try {
     psf.set_standard(tmplprof);
     if (tmplprof->get_nbin()/4 < nharm) { nharm = tmplprof->get_nbin()/4; }
     psf.set_nharm(nharm);
-    Pulsar::max_harmonic = psf.get_nharm();
     //psf.set_error_method(ProfileShiftFit::MCMC_Variance);
 
     /* Iterate template, TOA fitting */
